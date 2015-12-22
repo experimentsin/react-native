@@ -83,4 +83,5 @@ env:
 branches:
   only:
     - master
+    - contrib
     - /^.*-stable$/
