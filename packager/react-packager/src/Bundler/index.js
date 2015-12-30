@@ -136,7 +136,9 @@ class Bundler {
     this._projectRoots = opts.projectRoots;
     this._assetServer = opts.assetServer;
 
-    this._getTransformOptions = opts.getTransformOptions;
+    if (opts.getTransformOptionsModulePath) {
+      this._getTransformOptionsModule = require(opts.getTransformOptionsModulePath);
+    }
   }
 
   kill() {
@@ -156,6 +158,7 @@ class Bundler {
     dev: isDev,
     platform,
     unbundle: isUnbundle,
+    hot: hot,
   }) {
     // Const cannot have the same name as the method (babel/babel#2834)
     const bbundle = new Bundle(sourceMapUrl);
@@ -192,7 +195,8 @@ class Bundler {
             bbundle,
             response,
             module,
-            platform
+            platform,
+            hot,
           ).then(transformed => {
             if (bar) {
               bar.tick();
@@ -275,8 +279,39 @@ class Bundler {
     });
   }
 
+  bundleForHMR({
+    entryFile,
+    platform,
+  }) {
+    return this.getDependencies(entryFile, /*isDev*/true, platform).then(response => {
+      const module = response.dependencies.filter(module => module.path === entryFile)[0];
+
+      return Promise.all([
+        module.getName(),
+        this._transformer.loadFileAndTransform(
+          path.resolve(entryFile),
+          // TODO(martinb): pass non null main (t9527509)
+          this._getTransformOptions({main: null}, {hot: true}),
+        ),
+      ]).then(([moduleName, transformedSource]) => {
+        return (`
+          __accept(
+            '${moduleName}',
+            function(global, require, module, exports) {
+              ${transformedSource.code}
+            }
+          );
+        `);
+      });
+    });
+  }
+
   invalidateFile(filePath) {
     this._transformer.invalidateFile(filePath);
+  }
+
+  getShallowDependencies(entryFile) {
+    return this._resolver.getShallowDependencies(entryFile);
   }
 
   getDependencies(main, isDev, platform) {
@@ -315,7 +350,7 @@ class Bundler {
     );
   }
 
-  _transformModule(bundle, response, module, platform = null) {
+  _transformModule(bundle, response, module, platform = null, hot = false) {
     if (module.isAsset_DEPRECATED()) {
       return this.generateAssetModule_DEPRECATED(bundle, module);
     } else if (module.isAsset()) {
@@ -325,7 +360,10 @@ class Bundler {
     } else {
       return this._transformer.loadFileAndTransform(
         path.resolve(module.path),
-        this._getTransformOptions({bundle, module, platform})
+        this._getTransformOptions(
+          {bundleEntry: bundle.getMainModuleId(), modulePath: module.path},
+          {hot: hot},
+        ),
       );
     }
   }
@@ -418,6 +456,14 @@ class Bundler {
         virtual: true,
       });
     });
+  }
+
+  _getTransformOptions(config, options) {
+    const transformerOptions = this._getTransformOptionsModule
+      ? this._getTransformOptionsModule(config)
+      : null;
+
+    return {...options, ...transformerOptions};
   }
 }
 

@@ -23,8 +23,10 @@
 #import "RCTPerformanceLogger.h"
 #import "RCTUtils.h"
 #import "RCTJSCProfiler.h"
+#import "RCTBundleURLProcessor.h"
 
 static NSString *const RCTJSCProfilerEnabledDefaultsKey = @"RCTJSCProfilerEnabled";
+static NSString *const RCTHotLoadingEnabledDefaultsKey = @"RCTHotLoadingEnabled";
 
 @interface RCTJavaScriptContext : NSObject <RCTInvalidating>
 
@@ -88,6 +90,7 @@ RCT_NOT_IMPLEMENTED(-(instancetype)init)
 {
   RCTJavaScriptContext *_context;
   NSThread *_javaScriptThread;
+  NSURL *_bundleURL;
 }
 
 @synthesize valid = _valid;
@@ -141,6 +144,26 @@ static void RCTInstallJSCProfiler(RCTBridge *bridge, JSContextRef context)
       }
     }]];
   }
+}
+
+static BOOL isHotLoadingEnabled()
+{
+  NSString *enabledQS = [[RCTBundleURLProcessor sharedProcessor] getQueryStringValue:@"hot"];
+  return (enabledQS != nil && [enabledQS isEqualToString:@"true"]) ? YES : NO;
+}
+
+static void RCTInstallHotLoading(RCTBridge *bridge, RCTJSCExecutor *executor)
+{
+  [bridge.devMenu addItem:[RCTDevMenuItem toggleItemWithKey:RCTHotLoadingEnabledDefaultsKey title:@"Enable Hot Loading" selectedTitle:@"Disable Hot Loading" handler:^(BOOL enabledOnCurrentBundle) {
+    [executor executeBlockOnJavaScriptQueue:^{
+      BOOL enabledOnConfig = isHotLoadingEnabled();
+      // reload bundle when user change Hot Loading setting
+      if (enabledOnConfig != enabledOnCurrentBundle) {
+        [[RCTBundleURLProcessor sharedProcessor] setQueryStringValue:enabledOnCurrentBundle ? @"true" : @"false" forAttribute:@"hot"];
+        [bridge reload];
+      }
+    }];
+  }]];
 }
 
 #endif
@@ -296,6 +319,10 @@ static void RCTInstallJSCProfiler(RCTBridge *bridge, JSContextRef context)
     };
 
     RCTInstallJSCProfiler(_bridge, strongSelf->_context.ctx);
+
+    if ([self.bridge.delegate respondsToSelector:@selector(isHotLoadingEnabled)] && [self.bridge.delegate isHotLoadingEnabled]) {
+      RCTInstallHotLoading(_bridge, strongSelf);
+    }
 
     for (NSString *event in @[RCTProfileDidStartProfiling, RCTProfileDidEndProfiling]) {
       [[NSNotificationCenter defaultCenter] addObserver:strongSelf
@@ -508,6 +535,13 @@ static void RCTInstallJSCProfiler(RCTBridge *bridge, JSContextRef context)
       onComplete(error);
     }
   }), 0, @"js_call", (@{ @"url": sourceURL.absoluteString }))];
+
+  #if RCT_DEV
+  if (isHotLoadingEnabled()) {
+    // strip initial slash
+    [_bridge enqueueJSCall:@"HMRClient.enable" args:@[@"ios", [sourceURL.path substringFromIndex: 1]]];
+  }
+  #endif
 }
 
 - (void)executeBlockOnJavaScriptQueue:(dispatch_block_t)block

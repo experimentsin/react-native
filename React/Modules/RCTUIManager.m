@@ -553,7 +553,7 @@ extern NSString *RCTBridgeModuleNameForClass(Class cls);
 
       void (^completion)(BOOL) = ^(BOOL finished) {
         completionsCalled++;
-        if (callback && completionsCalled == frames.count - 1) {
+        if (callback && completionsCalled == frames.count) {
           callback(@[@(finished)]);
         }
       };
@@ -840,7 +840,7 @@ RCT_EXPORT_METHOD(createView:(nonnull NSNumber *)reactTag
   UIColor *backgroundColor = shadowView.backgroundColor;
 
   [self addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry){
-    UIView *view = [componentData createViewWithTag:reactTag props:props];
+    UIView *view = [componentData createViewWithTag:reactTag];
     if (view) {
       if ([view respondsToSelector:@selector(setBackgroundColor:)]) {
         ((UIView *)view).backgroundColor = backgroundColor;

@@ -149,6 +149,12 @@ var apps = [
     author: 'CANDDi LTD.',
   },
   {
+    name: 'CBS Sports Franchise Football',
+    icon: 'http://a2.mzstatic.com/us/r30/Purple69/v4/7b/0c/a0/7b0ca007-885a-7cfc-9fa2-2ec4394c2ecc/icon175x175.png',
+    link: 'https://play.google.com/store/apps/details?id=com.cbssports.fantasy.franchisefootball2015',
+    author: 'CBS Sports',
+  },  
+  {
     name: 'Company name search',
     icon: 'http://a4.mzstatic.com/us/r30/Purple69/v4/fd/47/53/fd47537c-5861-e208-d1d1-1e26b5e45a36/icon350x350.jpeg',
     link: 'https://itunes.apple.com/us/app/company-name-search/id1043824076',
@@ -162,6 +168,16 @@ var apps = [
     icon: 'http://a3.mzstatic.com/us/r30/Purple6/v4/10/fb/6a/10fb6a50-57c8-061a-d865-503777bf7f00/icon175x175.png',
     link: 'https://itunes.apple.com/us/app/dareu-dare-your-friends-dare/id1046434563?mt=8',
     author: 'Rishabh Mehan',
+  },
+  {
+    name: 'DockMan',
+    icon: 'http://a1.mzstatic.com/us/r30/Purple49/v4/91/b5/75/91b57552-d9bc-d8bc-10a1-617de920aaa6/icon175x175.png',
+    linkAppStore: 'https://itunes.apple.com/app/dockman/id1061469696',
+    linkPlayStore: 'https://play.google.com/store/apps/details?id=com.s21g.DockMan',
+    blogs: [
+      'http://www.s21g.com/DockMan.html',
+    ],
+    author: 'Genki Takiuchi (s21g Inc.)',
   },
   {
     name: 'DropBot',
@@ -241,6 +257,12 @@ var apps = [
     linkAppStore: 'https://itunes.apple.com/gb/app/kakapo/id1046673139?ls=1&mt=8',
     linkPlayStore: 'https://play.google.com/store/apps/details?id=com.kakaponative',
     author: 'Daniel Levitt',
+  },
+  {
+    name: 'Koza Gujarati Dictionary',
+    icon: 'http://a1.mzstatic.com/us/r30/Purple69/v4/77/95/83/77958377-05ae-4754-684a-3c9dbb67b517/icon175x175.jpeg',
+    link: 'https://itunes.apple.com/in/app/koza-english-to-gujarati-dictionary/id982752928?mt=8',
+    author: 'KozaApps',
   },
   {
     name: 'Leanpub',
